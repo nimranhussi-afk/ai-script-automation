@@ -1,0 +1,359 @@
+{
+  "name": "first portfolio ai",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "857a3b50-396f-403b-8cd7-7ec93c79d860",
+      "name": "When clicking ‘Execute workflow’",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an elite, viral content strategist. Take the following inputs:\n- Topic: {{ $json.Topic }}\n- Visual Style: {{ $json.style }}\n\nTasks:\n1. Write a punchy, emotionally resonant 3-sentence voiceover script for a reel.\n2. Expand the visual style into a highly descriptive, professional text-to-image prompt for an AI image generator.\n\nCRITICAL: You must return your response as a raw JSON object with exactly two keys: \"scriptText\" and \"imagePrompt\". Do not wrap it in markdown code blocks like ```json. Do not include conversational greetings. Return ONLY the JSON object.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        832,
+        16
+      ],
+      "id": "2af1272b-7b4c-4093-8bca-1bb05355191e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        288,
+        112
+      ],
+      "id": "006e9a50-4556-4322-999d-60d451d31059",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "XJgUlqbKrM0IveXK",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Grab the raw text string from the AI output\nlet rawText = $json.output;\n\n// 2. Clean out any markdown wrappers if the AI snuck them in\nif (rawText.includes(\"```json\")) {\n    rawText = rawText.split(\"```json\")[1].split(\"```\")[0];\n} else if (rawText.includes(\"```\")) {\n    rawText = rawText.split(\"```\")[1].split(\"```\")[0];\n}\n// This forces n8n to only pass the very first row down the stream\n\n\n// 3. Convert the raw string into an actual JavaScript Object\nconst cleanedData = JSON.parse(rawText.trim());\n\n// 4. Return clean, distinct keys to n8n\nreturn {\n    scriptText: cleanedData.scriptText,\n    imagePrompt: cleanedData.imagePrompt\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        16
+      ],
+      "id": "c902fae9-026b-4d31-8e39-e5780c42e8e9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": "=https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=1080&auto=format&fit=crop",
+        "options": {
+          "response": {
+            "response": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1392,
+        16
+      ],
+      "id": "cb98ac82-7849-47e6-8ba2-599ef4b47db2",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1f3vpn-LwIL6fZSFP9r0SNTGhKl4dUEQ2bjb7YKCJd2A",
+          "mode": "list",
+          "cachedResultName": "AI Content Engine Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f3vpn-LwIL6fZSFP9r0SNTGhKl4dUEQ2bjb7YKCJd2A/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f3vpn-LwIL6fZSFP9r0SNTGhKl4dUEQ2bjb7YKCJd2A/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "topic": "={{ $('Get row(s) in sheet').item.json.topic }}",
+            "script": "={{ $('Code in JavaScript').item.json.scriptText }}",
+            "final asset link": "=https://loremflickr.com/1080/1080/vintage,aesthetic?random={{ encodeURIComponent($json.scriptText) }}",
+            "status": "Ready to Post"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "script",
+              "displayName": "script",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "final asset link",
+              "displayName": "final asset link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1808,
+        16
+      ],
+      "id": "0bb5ac48-aa05-46f3-8021-d8b4d4d7ca4b",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nN49Z5WScm0y2WxW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Lsfu-NNYHfb8drDdCCG2vzydamYmBTXmSkiBZ5ZoTfg",
+          "mode": "list",
+          "cachedResultName": "ai content engineer starter",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Lsfu-NNYHfb8drDdCCG2vzydamYmBTXmSkiBZ5ZoTfg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Lsfu-NNYHfb8drDdCCG2vzydamYmBTXmSkiBZ5ZoTfg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "combineFilters": "OR",
+        "options": {
+          "returnFirstMatch": false
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6fb1056c-beaf-4aa7-8c46-71465886243d",
+      "name": "Get row(s) in sheet",
+      "executeOnce": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nN49Z5WScm0y2WxW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// This forces n8n to only pass the very first row down the stream\nreturn [items[0]];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "b7cc6166-21b0-4e51-8530-1458da28112a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "3e258c01-ea54-4757-877b-8ad4d04302fa",
+      "name": "Loop Over Items"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "589525f4-683a-4578-92be-e7c87cb72401",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a046904a629bfe4af16e99eab4918cb5bb3ef8f12ae5c19157bd96732faff6d0"
+  },
+  "nodeGroups": [],
+  "id": "XiU7B65L90ynFUQA",
+  "tags": []
+}
